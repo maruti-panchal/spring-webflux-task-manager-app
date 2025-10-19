@@ -1,5 +1,6 @@
 package com.learnspring.webfluxtaskmanagerapp.repository;
 
+import com.learnspring.webfluxtaskmanagerapp.entity.TaskEntity;
 import com.learnspring.webfluxtaskmanagerapp.entity.UserEntity;
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -11,4 +12,5 @@ public interface UserRepository extends ReactiveMongoRepository<UserEntity, Stri
     Mono<UserEntity> findByUsername(String username);
 
 
+    Mono<UserEntity> save(TaskEntity taskEntity);
 }
