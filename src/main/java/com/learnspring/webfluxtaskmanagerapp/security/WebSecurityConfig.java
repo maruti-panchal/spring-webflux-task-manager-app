@@ -1,6 +1,7 @@
 package com.learnspring.webfluxtaskmanagerapp.security;
 
 
+import com.learnspring.webfluxtaskmanagerapp.filters.RequestCostFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
@@ -19,10 +20,12 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
 public class WebSecurityConfig{
     private final ReactiveAuthenticationManager reactiveAuthenticationManager;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final RequestCostFilter requestCostFilter;
 
-    public WebSecurityConfig(ReactiveAuthenticationManager reactiveAuthenticationManager, JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public WebSecurityConfig(ReactiveAuthenticationManager reactiveAuthenticationManager, JwtAuthenticationFilter jwtAuthenticationFilter, RequestCostFilter requestCostFilter) {
         this.reactiveAuthenticationManager = reactiveAuthenticationManager;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.requestCostFilter = requestCostFilter;
     }
     @Bean
     public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
@@ -40,6 +43,7 @@ public class WebSecurityConfig{
                 })
                 .authenticationManager(reactiveAuthenticationManager)
                 .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+                .addFilterAt(requestCostFilter, SecurityWebFiltersOrder.FIRST)
                 .build();
     }
 
