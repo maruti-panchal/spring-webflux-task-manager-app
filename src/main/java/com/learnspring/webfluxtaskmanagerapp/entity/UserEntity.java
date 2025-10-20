@@ -1,12 +1,10 @@
 package com.learnspring.webfluxtaskmanagerapp.entity;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import org.bson.types.ObjectId;
+import lombok.*;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
-import org.springframework.data.mongodb.core.mapping.DBRef;
+
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.ArrayList;
@@ -16,9 +14,11 @@ import java.util.List;
 @Builder
 @Getter
 @Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class UserEntity {
     @Id
-    private ObjectId id;
+    private String id;
     @Indexed(unique = true)
     private String username;
     private String firstName;
@@ -26,7 +26,6 @@ public class UserEntity {
     private String email;
     private String phone;
     private String password;
-    private List<String> roles;
-    @DBRef
-    private List<TaskEntity> tasks=new ArrayList<>();
+    private List<String> roles=new ArrayList<>();
+    private List<String> tasks=new ArrayList<>();
 }

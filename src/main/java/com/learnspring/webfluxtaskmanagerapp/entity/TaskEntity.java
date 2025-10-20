@@ -1,9 +1,6 @@
 package com.learnspring.webfluxtaskmanagerapp.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.bson.types.ObjectId;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -13,9 +10,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 public class TaskEntity {
     @Id
-    private ObjectId id;
+    private String id;
     private String username;
     private String title;
     private String description;

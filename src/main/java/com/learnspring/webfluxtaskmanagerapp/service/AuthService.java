@@ -56,7 +56,7 @@ public class AuthService {
 
     private SignupResponseDto convertUserEntityToSignUpResponseDto(UserEntity userEntity){
         return SignupResponseDto.builder()
-                .id(userEntity.getId().toString())
+                .id(userEntity.getId())
                 .username(userEntity.getUsername())
                 .email(userEntity.getEmail())
                 .phone(userEntity.getPhone())
