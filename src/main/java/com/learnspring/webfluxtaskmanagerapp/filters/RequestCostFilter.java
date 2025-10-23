@@ -18,24 +18,16 @@ public class RequestCostFilter implements WebFilter {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         Instant start = Instant.now();
-        String path = exchange.getRequest().getMethod() + " " + exchange.getRequest().getURI().getPath();
-        String requestId = exchange.getRequest().getHeaders().getFirst("X-Request-Id");
 
-        return chain.filter(exchange)
-                .doFinally(signal -> {
-                    Duration duration = Duration.between(start, Instant.now());
-                    long durationMs = duration.toMillis();
+        ServerHttpResponse response = exchange.getResponse();
 
-                    ServerHttpResponse response = exchange.getResponse();
-                    Integer status = response.getStatusCode() != null ? response.getStatusCode().value() : null;
+        response.beforeCommit(() -> {
+            long durationMs = Duration.between(start, Instant.now()).toMillis();
+            response.getHeaders().set("X-REQUEST-COST", String.valueOf(durationMs)+"ms");
+            return Mono.empty();
+        });
 
-                    System.out.println("Status: " + status);
-                    System.out.println("RequestId: " + requestId);
-                    System.out.println("Path: " + path);
-                    System.out.println("Duration: " + duration);
-                    System.out.println("Response: " + response);
-
-
-                });
+        // Continue the filter chain
+        return chain.filter(exchange);
     }
 }
