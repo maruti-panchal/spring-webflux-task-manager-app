@@ -6,8 +6,6 @@ import com.learnspring.webfluxtaskmanagerapp.dtos.SignUpRequestDto;
 import com.learnspring.webfluxtaskmanagerapp.dtos.SignupResponseDto;
 import com.learnspring.webfluxtaskmanagerapp.entity.UserEntity;
 import com.learnspring.webfluxtaskmanagerapp.repository.UserRepository;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;

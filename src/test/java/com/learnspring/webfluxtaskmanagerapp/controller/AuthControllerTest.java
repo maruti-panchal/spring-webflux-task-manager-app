@@ -5,25 +5,27 @@ import com.learnspring.webfluxtaskmanagerapp.dtos.LoginResponseDto;
 import com.learnspring.webfluxtaskmanagerapp.dtos.SignUpRequestDto;
 import com.learnspring.webfluxtaskmanagerapp.dtos.SignupResponseDto;
 import com.learnspring.webfluxtaskmanagerapp.service.AuthService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
-import java.util.Objects;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for the AuthController's signup method.
- * Does not load Spring Security or the full Spring context.
+ * Pure Unit Tests for AuthController.
+ * Bypasses the HTTP layer and uses StepVerifier to assert on reactive Mono streams.
  */
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
@@ -34,113 +36,83 @@ class AuthControllerTest {
     @InjectMocks
     private AuthController authController;
 
-    private WebTestClient webTestClient;
-
-    @BeforeEach
-    void setUp() {
-        webTestClient = WebTestClient.bindToController(authController).build();
-    }
 
     @Test
-    void signup_Success() {
-
+    void testSignupWithValidUserDetailsReturnsCreatedUser() {
         SignUpRequestDto requestDto = SignUpRequestDto.builder()
-                .firstName("Test")
-                .lastName("User")
-                .email("test@example.com")
-                .username("testuser")
-                .password("password123")
-                .phone("1234567890")
+                .email("maruti@gmail.com")
+                .username("maruti1")
+                .password("Mpanchat@123")
                 .role("USER")
                 .build();
-
-
-        SignupResponseDto responseDto = SignupResponseDto.builder()
-                .id("mock-user-id-123")
-                .username("testuser")
-                .email("test@example.com")
-                .phone("1234567890")
+        SignupResponseDto serviceResponse = SignupResponseDto.builder()
+                .id("1")
+                .username("maruti1")
+                .email("maruti@gmail.com")
                 .role("[USER]")
                 .build();
-
-
-        when(authService.signup(any(Mono.class))).thenReturn(Mono.just(responseDto));
-
-        webTestClient.post()
-                .uri("/auth/signup")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(Mono.just(requestDto), SignUpRequestDto.class)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(SignupResponseDto.class)
-                .value(response -> {
-                    Objects.requireNonNull(response);
-                    assert response.getUsername().equals("testuser");
-                    assert response.getId().equals("mock-user-id-123");
-                });
+        when(authService.signup(any(Mono.class))).thenReturn(Mono.just(serviceResponse));
+        Mono<ResponseEntity<SignupResponseDto>> responseEntityMono =
+                authController.signup(Mono.just(requestDto));
+        StepVerifier.create(responseEntityMono)
+                .expectNextMatches(responseEntity -> {
+                    assertEquals(HttpStatus.OK, responseEntity.getStatusCode(), "HTTP Status must be 200 OK");
+                    assertEquals("maruti1", responseEntity.getBody().getUsername(), "Username must match");
+                    assertEquals("[USER]", responseEntity.getBody().getRole(), "Role must match");
+                    return true;
+                })
+                .verifyComplete();
+        verify(authService, times(1)).signup(any(Mono.class));
     }
 
-
     @Test
-    void signup_UserAlreadyExists_ReturnsInternalServerError() {
-
-        SignUpRequestDto requestDto = SignUpRequestDto.builder()
-                .username("existinguser")
-                .password("anypass")
-                .build();
-
+    void testSignupWithInvalidUserDetailsThrowsException() {
+        SignUpRequestDto requestDto = SignUpRequestDto.builder().username("existinguser").password("pass").build();
         when(authService.signup(any(Mono.class)))
-                .thenReturn(Mono.error(new RuntimeException("Duplicate Key Error: Username already exists")));
-
-        webTestClient.post()
-                .uri("/auth/signup")
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(Mono.just(requestDto), SignUpRequestDto.class)
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+                .thenReturn(Mono.error(new ResponseStatusException(HttpStatus.CONFLICT, "Username already exists")));
+        Mono<ResponseEntity<SignupResponseDto>> responseEntityMono =
+                authController.signup(Mono.just(requestDto));
+        StepVerifier.create(responseEntityMono)
+                .expectErrorMatches(throwable ->
+                        throwable instanceof ResponseStatusException &&
+                                ((ResponseStatusException) throwable).getStatusCode() == HttpStatus.CONFLICT
+                )
+                .verify();
     }
 
     @Test
-    void login_Success(){
-
-        LoginRequestDto requestDto = LoginRequestDto
-                .builder()
-                .username("maruti1")
-                .password("password123")
-                .build();
-        LoginResponseDto responseDto = LoginResponseDto
-                .builder()
-                .username("maruti1")
-                .token("ahjhjhafjc-acuna")
-                .build();
-        when(authService.login(any(Mono.class))).thenReturn(Mono.just(responseDto));
-        webTestClient
-                .post()
-                .uri("/auth/login")
-                .accept(MediaType.APPLICATION_JSON)
-                .body(Mono.just(requestDto), LoginRequestDto.class)
-                .exchange()
-                .expectStatus().isOk()
-                .expectBody(LoginResponseDto.class)
-                .value(response -> {
-                    Objects.requireNonNull(response);
-                    assert response.getUsername().equals("maruti1");
-                    assert response.getToken().equals("ahjhjhafjc-acuna");
-                });
+    void login_Success_Returns200OK() {
+        LoginRequestDto requestDto = LoginRequestDto.builder()
+                .username("maruti1").password("Mpanchat@123").build();
+        LoginResponseDto serviceResponse = LoginResponseDto.builder()
+                .username("maruti1").token("mock-jwt-token-xyz").build();
+        when(authService.login(any(Mono.class))).thenReturn(Mono.just(serviceResponse));
+        Mono<ResponseEntity<LoginResponseDto>> responseEntityMono =
+                authController.login(Mono.just(requestDto));
+        StepVerifier.create(responseEntityMono)
+                .expectNextMatches(responseEntity -> {
+                    assertEquals(HttpStatus.OK, responseEntity.getStatusCode(), "HTTP Status must be 200 OK");
+                    assertEquals("maruti1", responseEntity.getBody().getUsername(), "Username in body must match");
+                    assertNotNull(responseEntity.getBody().getToken(), "Token must be present");
+                    return true;
+                })
+                .verifyComplete();
+        verify(authService, times(1)).login(any(Mono.class));
     }
 
-    @Test void login_UserNotFound_ReturnsInternalServerError() {
-        LoginRequestDto requestDto = LoginRequestDto
-                .builder()
-                .username("maruti1")
-                .password("password123")
-                .build();
-        when(authService.login(any(Mono.class))).thenReturn(Mono.error(new RuntimeException("User not found")));
-        webTestClient.post()
-                .uri("/auth/login")
-                .accept(MediaType.APPLICATION_JSON)
-                .body(Mono.just(requestDto), LoginRequestDto.class)
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
+    @Test
+    void login_Unauthorized_VerifiesError() {
+        LoginRequestDto requestDto = LoginRequestDto.builder()
+                .username("maruti1").password("wrongpassword").build();
+        when(authService.login(any(Mono.class)))
+                .thenReturn(Mono.error(new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid Credentials")));
+        Mono<ResponseEntity<LoginResponseDto>> responseEntityMono =
+                authController.login(Mono.just(requestDto));
+        StepVerifier.create(responseEntityMono)
+                .expectErrorMatches(throwable ->
+                        throwable instanceof ResponseStatusException &&
+                                ((ResponseStatusException) throwable).getStatusCode() == HttpStatus.UNAUTHORIZED
+                )
+                .verify();
     }
 }
