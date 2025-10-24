@@ -93,7 +93,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void signup_RepositoryFails_PropagatesError() {
+    void testSignUpFailsAndReturnError() {
 
         SignUpRequestDto requestDto = SignUpRequestDto.builder().username(TEST_USERNAME).password("pass").role(TEST_ROLE).build();
 
@@ -113,7 +113,7 @@ class AuthServiceTest {
 
 
     @Test
-    void login_SuccessfulAuthentication_ReturnsLoginResponseDto() {
+    void testLoginWithValidDetailsAndReturnUser() {
 
         LoginRequestDto requestDto = LoginRequestDto.builder()
                 .username(TEST_USERNAME)
@@ -138,7 +138,7 @@ class AuthServiceTest {
     }
 
     @Test
-    void login_AuthenticationFails_PropagatesError() {
+    void testLoginFailsAndReturnError() {
 
         LoginRequestDto requestDto = LoginRequestDto.builder()
                 .username(TEST_USERNAME)
