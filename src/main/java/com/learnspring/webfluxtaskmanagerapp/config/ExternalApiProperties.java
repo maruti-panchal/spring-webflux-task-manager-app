@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 @Setter
 @Configuration
-@ConfigurationProperties(prefix = "external.fakestore")
+@ConfigurationProperties(prefix ="external.fakestore")
 public class ExternalApiProperties {
 
     private String baseUrl;

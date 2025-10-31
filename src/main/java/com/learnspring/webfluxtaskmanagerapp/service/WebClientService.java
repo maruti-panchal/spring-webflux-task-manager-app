@@ -19,29 +19,32 @@ public class WebClientService {
     public WebClientService(WebClient webClient) {
         this.webClient = webClient;
     }
-    public Flux<FakeStoreDto> getProducts() {
+    public Flux<FakeStoreDto> getProducts(String token) {
         return webClient
                 .get()
                 .uri("/products")
+                .header("Authorization", "Bearer "+token)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError,res-> Mono.error(new UsernameNotFoundException("Username not found")))
                 .onStatus(HttpStatusCode::is5xxServerError,res-> Mono.error(new InternalError("Internal Server Error")))
                 .bodyToFlux(FakeStoreDto.class);
     }
 
-    public Mono<FakeStoreDto> getProductById(String id) {
+    public Mono<FakeStoreDto> getProductById(String id,String token) {
         return webClient
                 .get()
                 .uri("/products/{id}", id)
+                .header("Authorization", "Bearer "+token)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError,res-> Mono.error(new UsernameNotFoundException("Username not found")))
                 .onStatus(HttpStatusCode::is5xxServerError,res-> Mono.error(new InternalError("Internal Server Error")))
                 .bodyToMono(FakeStoreDto.class);
     }
 
-    public Mono<FakeStoreDto> createProduct(FakeStoreDto request) {
+    public Mono<FakeStoreDto> createProduct(FakeStoreDto request, String token) {
         return webClient.post()
                 .uri("/products")
+                .header("Authorization", "Bearer "+token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .retrieve()

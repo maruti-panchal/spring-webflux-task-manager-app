@@ -17,18 +17,18 @@ public class WebClientController {
     private final WebClientService webClientService;
 
     @GetMapping("/products")
-    public Flux<FakeStoreDto> getProducts() {
-        return webClientService.getProducts();
+    public Flux<FakeStoreDto> getProducts(@RequestHeader(name = "Authorization") String token) {
+        return webClientService.getProducts(token);
     }
 
     @GetMapping("/products/{id}")
-    public Mono<ResponseEntity<FakeStoreDto>> getProductById(@PathVariable("id") String id) {
-        return webClientService.getProductById(id).map(ResponseEntity::ok);
+    public Mono<ResponseEntity<FakeStoreDto>> getProductById(@PathVariable("id") String id,@RequestHeader(name = "Authorization") String token) {
+        return webClientService.getProductById(id,token).map(ResponseEntity::ok);
     }
 
     @PostMapping("/products")
-    public Mono<ResponseEntity<FakeStoreDto>> createProduct(@RequestBody FakeStoreDto product) {
-        return webClientService.createProduct(product).map(ResponseEntity::ok);
+    public Mono<ResponseEntity<FakeStoreDto>> createProduct(@RequestBody FakeStoreDto product,@RequestHeader(name = "Authorization") String token) {
+        return webClientService.createProduct(product,token).map(ResponseEntity::ok);
     }
 
 }
