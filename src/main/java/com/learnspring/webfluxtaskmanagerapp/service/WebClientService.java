@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 @Service
 
 public class WebClientService {
-    private WebClient webClient;
+    private final WebClient webClient;
 
     public WebClientService(WebClient webClient) {
         this.webClient = webClient;
@@ -22,7 +22,7 @@ public class WebClientService {
     public Flux<FakeStoreDto> getProducts() {
         return webClient
                 .get()
-                .uri("https://fakestoreapi.com/products")
+                .uri("/products")
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError,res-> Mono.error(new UsernameNotFoundException("Username not found")))
                 .onStatus(HttpStatusCode::is5xxServerError,res-> Mono.error(new InternalError("Internal Server Error")))
@@ -32,7 +32,7 @@ public class WebClientService {
     public Mono<FakeStoreDto> getProductById(String id) {
         return webClient
                 .get()
-                .uri("https://fakestoreapi.com/products/"+id)
+                .uri("/products/{id}", id)
                 .retrieve()
                 .onStatus(HttpStatusCode::is4xxClientError,res-> Mono.error(new UsernameNotFoundException("Username not found")))
                 .onStatus(HttpStatusCode::is5xxServerError,res-> Mono.error(new InternalError("Internal Server Error")))
@@ -41,7 +41,7 @@ public class WebClientService {
 
     public Mono<FakeStoreDto> createProduct(FakeStoreDto request) {
         return webClient.post()
-                .uri("https://fakestoreapi.com/products")
+                .uri("/products")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .retrieve()
