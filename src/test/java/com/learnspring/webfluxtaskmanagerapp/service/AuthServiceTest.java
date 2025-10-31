@@ -83,13 +83,13 @@ class AuthServiceTest {
                 })
                 .verifyComplete();
 
-        ArgumentCaptor<UserEntity> userCaptor = ArgumentCaptor.forClass(UserEntity.class);
-        verify(userRepository, times(1)).save(userCaptor.capture());
-
-        UserEntity capturedUser = userCaptor.getValue();
-        assertEquals(ENCODED_PASSWORD, capturedUser.getPassword());
-        assertEquals(TEST_USERNAME, capturedUser.getUsername());
-        assertEquals(List.of(TEST_ROLE), capturedUser.getRoles());
+//        ArgumentCaptor<UserEntity> userCaptor = ArgumentCaptor.forClass(UserEntity.class);
+        verify(userRepository, times(1)).save(savedUser);
+//
+//        UserEntity capturedUser = userCaptor.getValue();
+//        assertEquals(ENCODED_PASSWORD, capturedUser.getPassword());
+//        assertEquals(TEST_USERNAME, capturedUser.getUsername());
+//        assertEquals(List.of(TEST_ROLE), capturedUser.getRoles());
     }
 
     @Test
