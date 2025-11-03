@@ -1,7 +1,9 @@
 package com.learnspring.webfluxtaskmanagerapp.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.learnspring.webfluxtaskmanagerapp.dtos.FakeStoreDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -10,25 +12,55 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import java.time.Duration;
 
 @Service
-
+@RequiredArgsConstructor
 public class WebClientService {
     private final WebClient webClient;
+    private static final Duration CACHE_TTL = Duration.ofMinutes(5);
+    private final ReactiveRedisTemplate<String, FakeStoreDto> redisTemplate;
 
-    public WebClientService(WebClient webClient) {
-        this.webClient = webClient;
-    }
+
+
+    private static final Duration TTL = Duration.ofMinutes(5);
+    private static final String PRODUCT_KEY = "product:";
+    private static final String PRODUCTS_KEY = "products:all";
+
+
+
+
+//    public Flux<FakeStoreDto> getProducts(String token) {
+//        return webClient
+//                .get()
+//                .uri("/products")
+//                .header("Authorization", "Bearer "+token)
+//                .retrieve()
+//                .onStatus(HttpStatusCode::is4xxClientError,res-> Mono.error(new UsernameNotFoundException("Username not found")))
+//                .onStatus(HttpStatusCode::is5xxServerError,res-> Mono.error(new InternalError("Internal Server Error")))
+//                .bodyToFlux(FakeStoreDto.class);
+//    }
+
     public Flux<FakeStoreDto> getProducts(String token) {
-        return webClient
-                .get()
-                .uri("/products")
-                .header("Authorization", "Bearer "+token)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError,res-> Mono.error(new UsernameNotFoundException("Username not found")))
-                .onStatus(HttpStatusCode::is5xxServerError,res-> Mono.error(new InternalError("Internal Server Error")))
-                .bodyToFlux(FakeStoreDto.class);
+        String cacheKey = "products:all";
+
+        return redisTemplate.opsForList().range(cacheKey, 0, -1)
+                .switchIfEmpty(
+                        webClient.get()
+                                .uri("/products")
+                                .header("Authorization", "Bearer " + token)
+                                .retrieve()
+                                .bodyToFlux(FakeStoreDto.class)
+                                .collectList()
+                                .flatMapMany(products ->
+                                        redisTemplate.opsForList()
+                                                .rightPushAll(cacheKey, products)
+                                                .then(redisTemplate.expire(cacheKey, CACHE_TTL))
+                                                .thenMany(Flux.fromIterable(products))
+                                )
+                );
     }
+
 
     public Mono<FakeStoreDto> getProductById(String id,String token) {
         return webClient
