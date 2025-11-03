@@ -6,13 +6,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-@Getter
 @Setter
-@Configuration
+@Getter
 @Component
-@ConfigurationProperties(prefix ="external.fakestore")
-public class ExternalApiProperties {
-
-    private String baseUrl;
-
+@ConfigurationProperties(prefix = "token")
+public class SecretConfig {
+    private String secret;
 }
