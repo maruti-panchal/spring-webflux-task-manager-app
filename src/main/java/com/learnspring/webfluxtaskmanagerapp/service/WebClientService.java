@@ -29,22 +29,9 @@ public class WebClientService {
 
 
 
-
-//    public Flux<FakeStoreDto> getProducts(String token) {
-//        return webClient
-//                .get()
-//                .uri("/products")
-//                .header("Authorization", "Bearer "+token)
-//                .retrieve()
-//                .onStatus(HttpStatusCode::is4xxClientError,res-> Mono.error(new UsernameNotFoundException("Username not found")))
-//                .onStatus(HttpStatusCode::is5xxServerError,res-> Mono.error(new InternalError("Internal Server Error")))
-//                .bodyToFlux(FakeStoreDto.class);
-//    }
-
     public Flux<FakeStoreDto> getProducts(String token) {
-        String cacheKey = "products:all";
 
-        return redisTemplate.opsForList().range(cacheKey, 0, -1)
+        return redisTemplate.opsForList().range(PRODUCTS_KEY, 0, -1)
                 .switchIfEmpty(
                         webClient.get()
                                 .uri("/products")
@@ -54,23 +41,28 @@ public class WebClientService {
                                 .collectList()
                                 .flatMapMany(products ->
                                         redisTemplate.opsForList()
-                                                .rightPushAll(cacheKey, products)
-                                                .then(redisTemplate.expire(cacheKey, CACHE_TTL))
+                                                .rightPushAll(PRODUCTS_KEY, products)
+                                                .then(redisTemplate.expire(PRODUCTS_KEY, CACHE_TTL))
                                                 .thenMany(Flux.fromIterable(products))
                                 )
                 );
     }
 
 
-    public Mono<FakeStoreDto> getProductById(String id,String token) {
-        return webClient
-                .get()
-                .uri("/products/{id}", id)
-                .header("Authorization", "Bearer "+token)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError,res-> Mono.error(new UsernameNotFoundException("Username not found")))
-                .onStatus(HttpStatusCode::is5xxServerError,res-> Mono.error(new InternalError("Internal Server Error")))
-                .bodyToMono(FakeStoreDto.class);
+    public Mono<FakeStoreDto> getProductById(String id, String token) {
+        return redisTemplate.opsForValue().get(PRODUCT_KEY)
+                .switchIfEmpty(
+                        webClient.get()
+                                .uri("/products/{id}", id)
+                                .header("Authorization", "Bearer " + token)
+                                .retrieve()
+                                .bodyToMono(FakeStoreDto.class)
+                                .flatMap(product ->
+                                        redisTemplate.opsForValue()
+                                                .set(PRODUCT_KEY, product, CACHE_TTL) // store in Redis with TTL
+                                                .thenReturn(product)
+                                )
+                );
     }
 
     public Mono<FakeStoreDto> createProduct(FakeStoreDto request, String token) {
