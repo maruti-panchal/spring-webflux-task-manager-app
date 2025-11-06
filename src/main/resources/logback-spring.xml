@@ -1,28 +1,40 @@
 <configuration>
     <contextName>webflux-app</contextName>
 
+    <!-- Console Appender (all logs go here) -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg [req=%X{requestId}]%n</pattern>
         </encoder>
     </appender>
 
-    <appender name="ROLLING" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>logs/app.log</file>
+    <!-- Error File Appender (only ERROR logs with stacktrace) -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/error.log</file>
+
+        <!-- Rotate daily, keep 7 days -->
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/app.%d{yyyy-MM-dd}.log</fileNamePattern>
-            <maxHistory>30</maxHistory>
+            <fileNamePattern>logs/error.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
         </rollingPolicy>
+
+        <filter class="ch.qos.logback.classic.filter.LevelFilter">
+            <level>ERROR</level>
+            <onMatch>ACCEPT</onMatch>
+            <onMismatch>DENY</onMismatch>
+        </filter>
+
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg [req=%X{requestId}]%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n%ex{full}%n</pattern>
         </encoder>
     </appender>
 
+    <!-- Root Logger: prints all logs to console -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
-        <appender-ref ref="ROLLING"/>
+        <appender-ref ref="ERROR_FILE"/>
     </root>
 
-    <!-- reduce noisy logs during development -->
+    <!-- Reduce Spring internal log noise -->
     <logger name="org.springframework" level="WARN"/>
 </configuration>
