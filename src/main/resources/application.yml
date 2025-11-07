@@ -7,10 +7,12 @@ spring:
     redis:
       host: localhost
       port: 6379
-
+    elasticsearch:
+      client:
+        reactive:
+          endpoints: localhost:9200
 token:
   secret: 1HE9W02H4BFDMZMAA&AWPQ03746678385BSMWSSOPWLSVDGGKDFMSBZXTEROTJHNSOWMSDWGHVDCNSDC&DC
-
 external:
   fakestore:
     base-url: https://fakestoreapi.com

@@ -1,8 +1,12 @@
 package com.learnspring.webfluxtaskmanagerapp.service;
 
 import com.learnspring.webfluxtaskmanagerapp.dtos.FakeStoreDto;
+import com.learnspring.webfluxtaskmanagerapp.repository.Productrepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
@@ -12,6 +16,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+
+import static org.springframework.data.elasticsearch.client.elc.Queries.matchAllQuery;
+
 
 @Slf4j
 @Service
@@ -46,6 +53,12 @@ public class WebClientService {
                 .doOnSuccess(p -> log.debug("Fetched product: {}", p))
                 .doOnError(e -> log.error("Error fetching product by ID {}", id, e));
     }
+
+    public Mono<Boolean> createError() {
+        // Simulate an exception
+        return Mono.error(new RuntimeException("Error creating error"));
+    }
+
 
 
     public Mono<FakeStoreDto> createProduct(FakeStoreDto request, String token) {
@@ -99,4 +112,6 @@ public class WebClientService {
                 .doOnSuccess(p -> log.debug("Cached product ID {} successfully", id))
                 .doOnError(e -> log.error("Error caching product {}", id, e));
     }
+
+
 }

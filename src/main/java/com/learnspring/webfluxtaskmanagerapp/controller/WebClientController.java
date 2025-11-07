@@ -2,6 +2,7 @@ package com.learnspring.webfluxtaskmanagerapp.controller;
 
 import com.learnspring.webfluxtaskmanagerapp.config.ReactorMdc;
 import com.learnspring.webfluxtaskmanagerapp.dtos.FakeStoreDto;
+import com.learnspring.webfluxtaskmanagerapp.service.ProductElasticService;
 import com.learnspring.webfluxtaskmanagerapp.service.WebClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,8 @@ import reactor.core.publisher.Mono;
 public class WebClientController {
 
     private final WebClientService webClientService;
+    private final ProductElasticService productElasticService;
+
 
     @GetMapping("/products")
     public Flux<FakeStoreDto> getProducts(@RequestHeader(name = "Authorization") String token) {
@@ -50,5 +53,38 @@ public class WebClientController {
                 .doOnError(err -> log.error("Error creating product: {}", err.getMessage()))
                 .map(ResponseEntity::ok);
     }
+
+    @GetMapping("/elastic-products")
+    public Flux<FakeStoreDto> getElasticProducts() {
+        return productElasticService.getProducts();
+    }
+
+    @GetMapping("/elastic-products/{id}")
+    public Mono<ResponseEntity<FakeStoreDto>> getElasticProductById(@PathVariable("id") String id) {
+        return productElasticService.getElasticProductById(id).map(ResponseEntity::ok);
+    }
+
+    @PostMapping("/elastic-products")
+    public Mono<ResponseEntity<FakeStoreDto>> createElasticProduct(@RequestBody FakeStoreDto product) {
+        return productElasticService.createProductForElastic(product).map(ResponseEntity::ok);
+    }
+
+
+    @GetMapping("/error")
+    public Mono<ResponseEntity<String>> createError() {
+        return webClientService.createError()
+                .transform(ReactorMdc.mdcLifterMono())
+                .doOnSubscribe(s -> log.debug("Creating....."))
+                .doOnSuccess(result -> log.info("Created successfully"))
+                .doOnError(err -> log.error("Error occurred: {}", err.getMessage(), err))
+                .map(result -> ResponseEntity.ok("Success"))
+                .onErrorResume(e -> {
+                    log.error("Handling error gracefully: {}", e.getMessage(), e);
+                    return Mono.just(ResponseEntity.internalServerError()
+                            .body("Something went wrong: " + e.getMessage()));
+                });
+    }
+
+
 
 }
