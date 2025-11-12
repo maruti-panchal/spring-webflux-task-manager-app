@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <contextName>webflux-app</contextName>
+
+    <!-- Optional: show Logback internal status on console (helpful while testing) -->
+    <!-- <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener"/> -->
+
+    <!-- Console (all logs) -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg [req=%X{requestId}]%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Error file (active file = logs/error.log). Archived files will be created per minute -->
+    <appender name="ERROR_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/error.log</file>
+
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- roll every minute -->
+            <fileNamePattern>logs/error.%d{yyyy-MM-dd-HH-mm}.log</fileNamePattern>
+
+            <!-- keep exactly 7 archived minute files (oldest removed when 8th created) -->
+            <maxHistory>7</maxHistory>
+
+            <!-- optional cap on total archive size -->
+            <totalSizeCap>200MB</totalSizeCap>
+        </rollingPolicy>
+
+        <!-- only capture ERRORs -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+
+        <encoder>
+            <!-- include full stacktrace for easier debugging -->
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n%ex{full}%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- root: console + error file (error file receives only ERROR due to its filter) -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ERROR_FILE"/>
+    </root>
+
+    <logger name="org.springframework" level="WARN"/>
+</configuration>

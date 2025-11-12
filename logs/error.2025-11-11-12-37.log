@@ -1,0 +1,16 @@
+2025-11-11 12:37:27.734 [restartedMain] ERROR o.s.b.d.LoggingFailureAnalysisReporter - 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Parameter 1 of constructor in com.learnspring.webfluxtaskmanagerapp.service.WebClientService required a bean of type 'org.springframework.data.redis.core.ReactiveRedisTemplate' that could not be found.
+
+
+Action:
+
+Consider defining a bean of type 'org.springframework.data.redis.core.ReactiveRedisTemplate' in your configuration.
+
+

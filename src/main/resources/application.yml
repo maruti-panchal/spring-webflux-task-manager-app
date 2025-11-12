@@ -1,0 +1,23 @@
+spring:
+  application:
+    name: webflux-task-manager-app
+  data:
+    mongodb:
+      uri: mongodb+srv://panchalmaruti70_db_user:8eyrMTCYogJ6YuEZ@cluster0.evdz0r6.mongodb.net/webflux_task_db?retryWrites=true&w=majority
+    redis:
+      host: localhost
+      port: 6379
+    elasticsearch:
+      client:
+        reactive:
+          endpoints: localhost:9200
+token:
+  secret: 1HE9W02H4BFDMZMAA&AWPQ03746678385BSMWSSOPWLSVDGGKDFMSBZXTEROTJHNSOWMSDWGHVDCNSDC&DC
+external:
+  fakestore:
+    base-url: https://fakestoreapi.com
+
+#    panchalmaruti70_db_user
+#
+#    8eyrMTCYogJ6YuEZ
+
