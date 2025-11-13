@@ -11,6 +11,20 @@ spring:
       client:
         reactive:
           endpoints: localhost:9200
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: marutipanchal51@gmail.com
+    password: uaoadxqedmtqnaxj
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 3000
+          writetimeout: 5000
 token:
   secret: 1HE9W02H4BFDMZMAA&AWPQ03746678385BSMWSSOPWLSVDGGKDFMSBZXTEROTJHNSOWMSDWGHVDCNSDC&DC
 external:
@@ -21,3 +35,4 @@ external:
 #
 #    8eyrMTCYogJ6YuEZ
 
+#  uaoa dxqe dmtq naxj

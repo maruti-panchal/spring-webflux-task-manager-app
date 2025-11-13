@@ -5,7 +5,9 @@ import com.learnspring.webfluxtaskmanagerapp.dtos.LoginResponseDto;
 import com.learnspring.webfluxtaskmanagerapp.dtos.SignUpRequestDto;
 import com.learnspring.webfluxtaskmanagerapp.dtos.SignupResponseDto;
 import com.learnspring.webfluxtaskmanagerapp.entity.UserEntity;
+import com.learnspring.webfluxtaskmanagerapp.event.AccountCreatedEvent;
 import com.learnspring.webfluxtaskmanagerapp.repository.UserRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -18,18 +20,24 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final AuthenticationService authenticationService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
-    public AuthService(PasswordEncoder passwordEncoder, UserRepository userRepository, AuthenticationService authenticationService) {
+    public AuthService(PasswordEncoder passwordEncoder, UserRepository userRepository, AuthenticationService authenticationService, ApplicationEventPublisher applicationEventPublisher) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.authenticationService = authenticationService;
+        this.applicationEventPublisher = applicationEventPublisher;
     }
 
     public Mono<SignupResponseDto> signup(Mono<SignUpRequestDto> signUpRequestDto) {
         return signUpRequestDto
                 .map(this::convertSignUpRequestDtoToUserEntity)
                 .flatMap(userRepository::save)
-                .map(this::convertUserEntityToSignUpResponseDto);
+                .map(this::convertUserEntityToSignUpResponseDto)
+                .doOnSuccess(signupResponseDto ->
+                        applicationEventPublisher.publishEvent(new AccountCreatedEvent(
+                                this,signupResponseDto.getEmail(),
+                                signupResponseDto.getUsername())));
     }
 
     public Mono<LoginResponseDto> login(Mono<LoginRequestDto> loginRequestDto) {
