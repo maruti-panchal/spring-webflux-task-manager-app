@@ -1,7 +1,9 @@
 package com.learnspring.webfluxtaskmanagerapp.service;
 
+import com.learnspring.webfluxtaskmanagerapp.dtos.SignupResponseDto;
 import com.learnspring.webfluxtaskmanagerapp.dtos.TaskResponseDto;
 import com.learnspring.webfluxtaskmanagerapp.entity.TaskEntity;
+import com.learnspring.webfluxtaskmanagerapp.entity.UserEntity;
 import com.learnspring.webfluxtaskmanagerapp.repository.TaskRepository;
 import com.learnspring.webfluxtaskmanagerapp.repository.UserRepository;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -9,15 +11,18 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
 @Service
 public class AdminService {
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+    private final Sinks.Many<SignupResponseDto> userEntitySink;
 
-    public AdminService(TaskRepository taskRepository, UserRepository userRepository) {
+    public AdminService(TaskRepository taskRepository, UserRepository userRepository, Sinks.Many<SignupResponseDto> userEntitySink) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
+        this.userEntitySink = userEntitySink;
     }
 
     public Flux<TaskResponseDto> getAllTasks() {
@@ -65,4 +70,6 @@ public class AdminService {
                 .username(task.getUsername())
                 .build();
     }
+
+
 }

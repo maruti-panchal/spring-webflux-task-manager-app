@@ -3,7 +3,6 @@ package com.learnspring.webfluxtaskmanagerapp.service;
 import com.learnspring.webfluxtaskmanagerapp.dtos.TaskRequestDto;
 import com.learnspring.webfluxtaskmanagerapp.dtos.TaskResponseDto;
 import com.learnspring.webfluxtaskmanagerapp.entity.TaskEntity;
-import com.learnspring.webfluxtaskmanagerapp.event.TaskCreatedEvent;
 import com.learnspring.webfluxtaskmanagerapp.repository.TaskRepository;
 import com.learnspring.webfluxtaskmanagerapp.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
@@ -24,10 +23,12 @@ public class MyUserService {
     private final UserRepository userRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
 
+
     public MyUserService(TaskRepository taskRepository, UserRepository userRepository, ApplicationEventPublisher applicationEventPublisher) {
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
         this.applicationEventPublisher = applicationEventPublisher;
+
     }
 
     public Flux<TaskResponseDto> getMyTasks() {
@@ -59,7 +60,6 @@ public class MyUserService {
                             })
                             .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found")));
                 })
-                .doOnSuccess(taskEntity -> {applicationEventPublisher.publishEvent(new TaskCreatedEvent(this,taskEntity.getUsername(),taskEntity.getTitle()));})
                 .map(this::toResponse);
     }
 

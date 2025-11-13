@@ -1,8 +1,6 @@
 package com.learnspring.webfluxtaskmanagerapp.service;
 
 import com.learnspring.webfluxtaskmanagerapp.event.AccountCreatedEvent;
-import com.learnspring.webfluxtaskmanagerapp.event.TaskCreatedEvent;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.mail.SimpleMailMessage;
 

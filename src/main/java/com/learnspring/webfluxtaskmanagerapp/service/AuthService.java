@@ -10,7 +10,9 @@ import com.learnspring.webfluxtaskmanagerapp.repository.UserRepository;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 
 import java.util.List;
 
@@ -21,12 +23,14 @@ public class AuthService {
     private final UserRepository userRepository;
     private final AuthenticationService authenticationService;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final Sinks.Many<SignupResponseDto> userStreamSink;
 
-    public AuthService(PasswordEncoder passwordEncoder, UserRepository userRepository, AuthenticationService authenticationService, ApplicationEventPublisher applicationEventPublisher) {
+    public AuthService(PasswordEncoder passwordEncoder, UserRepository userRepository, AuthenticationService authenticationService, ApplicationEventPublisher applicationEventPublisher,Sinks.Many<SignupResponseDto> userStreamSink) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.authenticationService = authenticationService;
         this.applicationEventPublisher = applicationEventPublisher;
+        this.userStreamSink = userStreamSink;
     }
 
     public Mono<SignupResponseDto> signup(Mono<SignUpRequestDto> signUpRequestDto) {
@@ -34,6 +38,7 @@ public class AuthService {
                 .map(this::convertSignUpRequestDtoToUserEntity)
                 .flatMap(userRepository::save)
                 .map(this::convertUserEntityToSignUpResponseDto)
+                .doOnSuccess(signupResponseDto -> userStreamSink.tryEmitNext(signupResponseDto))
                 .doOnSuccess(signupResponseDto ->
                         applicationEventPublisher.publishEvent(new AccountCreatedEvent(
                                 this,signupResponseDto.getEmail(),
@@ -46,6 +51,10 @@ public class AuthService {
                         .authenticate(loginRequest.getUsername(),loginRequest.getPassword())
                         .map(auth->LoginResponseDto.builder().token(auth.get("Token")).username(loginRequest.getUsername()).build())
         );
+    }
+
+    public Flux<SignupResponseDto> userStream() {
+        return userStreamSink.asFlux().publish().autoConnect(1);
     }
 
     private UserEntity convertSignUpRequestDtoToUserEntity(SignUpRequestDto signUpRequestDto){
